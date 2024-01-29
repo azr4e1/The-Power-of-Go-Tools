@@ -12,8 +12,7 @@ func TestLineCounter(t *testing.T) {
 	lines := "The quick brown fox\njumps over the\n lazy dog\n"
 	buf.WriteString(lines)
 	want := 3
-	counter := linecounter.NewCounter()
-	counter.Input = buf
+	counter := linecounter.NewCounter(linecounter.WithInput(buf))
 	got := counter.Count()
 
 	if want != got {
