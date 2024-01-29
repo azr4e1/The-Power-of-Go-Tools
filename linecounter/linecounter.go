@@ -28,7 +28,7 @@ func WithInput(input io.Reader) option {
 func WithOutput(output io.Writer) option {
 	return func(c *counter) error {
 		if output == nil {
-			return errors.New("nil output reader")
+			return errors.New("nil output writer")
 		}
 		c.output = output
 		return nil
@@ -63,7 +63,10 @@ func (c counter) Count() int {
 }
 
 func Main() {
-	c, _ := NewCounter()
+	c, err := NewCounter()
+	if err != nil {
+		panic(err)
+	}
 	count := c.Count()
 	fmt.Println("---------------\nNumber of lines:", count)
 }
