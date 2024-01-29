@@ -15,6 +15,21 @@ type counter struct {
 
 type option func(*counter) error
 
+func WithInputFromArgs(args []string) option {
+	return func(c *counter) error {
+		if len(args) < 1 {
+			return nil
+		}
+		filename := args[0]
+		fHandle, err := os.Open(filename)
+		if err != nil {
+			return err
+		}
+		c.input = fHandle
+		return nil
+	}
+}
+
 func WithInput(input io.Reader) option {
 	return func(c *counter) error {
 		if input == nil {
@@ -62,11 +77,13 @@ func (c counter) Count() int {
 	return lines
 }
 
-func Main() {
-	c, err := NewCounter()
+func Main() int {
+	c, err := NewCounter(WithInputFromArgs(os.Args[1:]))
 	if err != nil {
-		panic(err)
+		fmt.Fprintln(os.Stderr, err)
+		return 1
 	}
 	count := c.Count()
-	fmt.Println("---------------\nNumber of lines:", count)
+	fmt.Println("Number of lines:", count)
+	return 0
 }

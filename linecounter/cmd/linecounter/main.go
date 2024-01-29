@@ -2,8 +2,9 @@ package main
 
 import (
 	"linecounter"
+	"os"
 )
 
 func main() {
-	linecounter.Main()
+	os.Exit(linecounter.Main())
 }
