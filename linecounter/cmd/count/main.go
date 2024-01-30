@@ -6,5 +6,5 @@ import (
 )
 
 func main() {
-	os.Exit(linecounter.MainLines())
+	os.Exit(linecounter.Main())
 }

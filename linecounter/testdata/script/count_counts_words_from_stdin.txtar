@@ -1,5 +1,5 @@
 stdin five_words.txt
-exec words
+exec count
 stdout '^5\n$'
 
 -- five_words.txt --

@@ -3,6 +3,7 @@ package linecounter
 import (
 	"bufio"
 	"errors"
+	"flag"
 	"fmt"
 	"io"
 	"os"
@@ -95,28 +96,20 @@ func (c counter) Words() int {
 	return wordsNr
 }
 
-func MainLines() int {
+func Main() int {
+	lineMode := flag.Bool("lines", false, "Count lines, not words")
+	flag.Parse()
 	c, err := NewCounter(
-		WithInputFromArgs(os.Args[1:]),
+		WithInputFromArgs(flag.Args()),
 	)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		return 1
 	}
-	count := c.Lines()
-	fmt.Println(count)
-	return 0
-}
-
-func MainWords() int {
-	c, err := NewCounter(
-		WithInputFromArgs(os.Args[1:]),
-	)
-	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		return 1
+	if *lineMode {
+		fmt.Println(c.Lines())
+	} else {
+		fmt.Println(c.Words())
 	}
-	count := c.Words()
-	fmt.Println(count)
 	return 0
 }
