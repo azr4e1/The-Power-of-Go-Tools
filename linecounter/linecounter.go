@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"strings"
 )
 
 type counter struct {
@@ -89,15 +88,9 @@ func (c counter) Lines() int {
 func (c counter) Words() int {
 	wordsNr := 0
 	input := bufio.NewScanner(c.input)
+	input.Split(bufio.ScanWords)
 	for input.Scan() {
-		line := input.Text()
-		words := strings.Split(line, " ")
-		for _, word := range words {
-			if strings.TrimSpace(word) == "" {
-				continue
-			}
-			wordsNr++
-		}
+		wordsNr++
 	}
 	return wordsNr
 }
@@ -111,7 +104,7 @@ func MainLines() int {
 		return 1
 	}
 	count := c.Lines()
-	fmt.Println("Number of lines:", count)
+	fmt.Println(count)
 	return 0
 }
 
@@ -124,6 +117,6 @@ func MainWords() int {
 		return 1
 	}
 	count := c.Words()
-	fmt.Println("Number of lines:", count)
+	fmt.Println(count)
 	return 0
 }

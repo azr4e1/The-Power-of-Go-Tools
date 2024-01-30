@@ -1,5 +1,6 @@
-exec linecounter three_lines.txt
-stdout '^Number of lines: 4\n$'
+stdin three_lines.txt
+exec lines
+stdout '^4\n$'
 
 -- three_lines.txt --
 this input
