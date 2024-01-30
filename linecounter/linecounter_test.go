@@ -71,6 +71,23 @@ func TestWithInputFromArgs_NoArgsProvided(t *testing.T) {
 	}
 }
 
+func TestBytesCounter(t *testing.T) {
+	t.Parallel()
+	buf := new(bytes.Buffer)
+	bytes := "The quick brown fox\njumps over the\n lazy dog\n"
+	buf.WriteString(bytes)
+	want := len(buf.Bytes())
+	counter, err := linecounter.NewCounter(linecounter.WithInput(buf))
+	if err != nil {
+		t.Fatal(err)
+	}
+	got := counter.Bytes()
+
+	if want != got {
+		t.Errorf("want %d, got %d", want, got)
+	}
+}
+
 func Test(t *testing.T) {
 	t.Parallel()
 	testscript.Run(t, testscript.Params{
