@@ -93,6 +93,11 @@ func (c counter) Words() int {
 	for input.Scan() {
 		wordsNr++
 	}
+
+	for _, f := range c.files {
+		f.(io.Closer).Close()
+	}
+
 	return wordsNr
 }
 
@@ -103,6 +108,11 @@ func (c counter) Bytes() int {
 		// fmt.Println(input.Text())
 		bytesNr += len(input.Bytes()) + 1
 	}
+
+	for _, f := range c.files {
+		f.(io.Closer).Close()
+	}
+
 	return bytesNr
 }
 
@@ -124,7 +134,7 @@ func Main() int {
 		return 1
 	}
 	if *lineMode && *byteMode {
-		fmt.Fprintln(os.Stderr, err)
+		fmt.Fprintln(os.Stderr, "you cannot provide both flags at the same time")
 		return 2
 	} else if *lineMode {
 		fmt.Println(c.Lines())
