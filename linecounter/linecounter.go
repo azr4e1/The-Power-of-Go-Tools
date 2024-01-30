@@ -6,9 +6,11 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strings"
 )
 
 type counter struct {
+	files  []io.Reader
 	input  io.Reader
 	output io.Writer
 }
@@ -20,12 +22,15 @@ func WithInputFromArgs(args []string) option {
 		if len(args) < 1 {
 			return nil
 		}
-		filename := args[0]
-		fHandle, err := os.Open(filename)
-		if err != nil {
-			return err
+		c.files = make([]io.Reader, len(args))
+		for i, path := range args {
+			f, err := os.Open(path)
+			if err != nil {
+				return err
+			}
+			c.files[i] = f
 		}
-		c.input = fHandle
+		c.input = io.MultiReader(c.files...)
 		return nil
 	}
 }
@@ -66,7 +71,7 @@ func NewCounter(opts ...option) (counter, error) {
 	return c, nil
 }
 
-func (c counter) Count() int {
+func (c counter) Lines() int {
 	lines := 0
 	input := bufio.NewScanner(c.input)
 
@@ -74,16 +79,51 @@ func (c counter) Count() int {
 		lines++
 	}
 
+	for _, f := range c.files {
+		f.(io.Closer).Close()
+	}
+
 	return lines
 }
 
-func Main() int {
-	c, err := NewCounter(WithInputFromArgs(os.Args[1:]))
+func (c counter) Words() int {
+	wordsNr := 0
+	input := bufio.NewScanner(c.input)
+	for input.Scan() {
+		line := input.Text()
+		words := strings.Split(line, " ")
+		for _, word := range words {
+			if strings.TrimSpace(word) == "" {
+				continue
+			}
+			wordsNr++
+		}
+	}
+	return wordsNr
+}
+
+func MainLines() int {
+	c, err := NewCounter(
+		WithInputFromArgs(os.Args[1:]),
+	)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		return 1
 	}
-	count := c.Count()
+	count := c.Lines()
+	fmt.Println("Number of lines:", count)
+	return 0
+}
+
+func MainWords() int {
+	c, err := NewCounter(
+		WithInputFromArgs(os.Args[1:]),
+	)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		return 1
+	}
+	count := c.Words()
 	fmt.Println("Number of lines:", count)
 	return 0
 }
