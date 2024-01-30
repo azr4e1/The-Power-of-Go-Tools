@@ -118,8 +118,8 @@ func (c counter) Bytes() int {
 
 func Main() int {
 	flag.Usage = func() {
-		fmt.Printf("Usage: %s [-lines] [files...]\n", os.Args[0])
-		fmt.Println("Counts words (or lines) from stdin (or files).")
+		fmt.Printf("Usage: %s [-lines | -bytes] [files...]\n", os.Args[0])
+		fmt.Println("Counts words (or lines or bytes) from stdin (or files).")
 		fmt.Println("Flags:")
 		flag.PrintDefaults()
 	}
@@ -133,14 +133,17 @@ func Main() int {
 		fmt.Fprintln(os.Stderr, err)
 		return 1
 	}
-	if *lineMode && *byteMode {
+
+	switch {
+
+	case *lineMode && *byteMode:
 		fmt.Fprintln(os.Stderr, "you cannot provide both flags at the same time")
 		return 2
-	} else if *lineMode {
+	case *lineMode:
 		fmt.Println(c.Lines())
-	} else if *byteMode {
+	case *byteMode:
 		fmt.Println(c.Bytes())
-	} else {
+	default:
 		fmt.Println(c.Words())
 	}
 	return 0
