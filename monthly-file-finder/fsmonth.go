@@ -1,4 +1,4 @@
-package fsmont
+package fsmonth
 
 import (
 	"io/fs"
@@ -13,11 +13,12 @@ func MonthFiles(fsys fs.FS) []string {
 		if err != nil {
 			return err
 		}
-		if info.ModTime().AddDate(0, 0, 30).Compare(time.Now()) < 0 {
+		if (info.ModTime().AddDate(0, 0, 30).Compare(time.Now()) <= 0) || info.IsDir() {
 			return nil
 		}
 		files = append(files, p)
 		return nil
 	})
-	return []string{}
+
+	return files
 }
