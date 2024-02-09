@@ -1,0 +1,1 @@
+Battery 0: Discharging, 88%, discharging at zero rate - will never fully discharge.
