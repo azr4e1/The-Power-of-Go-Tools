@@ -1,3 +1,5 @@
+//go:build integration
+
 package battery_test
 
 import (

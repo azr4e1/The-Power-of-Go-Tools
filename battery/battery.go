@@ -1,28 +1,27 @@
 package battery
 
 import (
-	"errors"
+	"fmt"
+	"regexp"
 	"strconv"
-	"strings"
 )
 
 type Status struct {
 	ChargePercent int
 }
 
-func ParseACPIOutput(status string) (Status, error) {
-	splitStatus := strings.Split(status, " ")
-	if len(splitStatus) < 4 {
-		return Status{}, errors.New("problem in parsing acpi output: string too short")
-	}
-	percentageBit := splitStatus[3]
-	i, err := strconv.Atoi(strings.Replace(percentageBit, "%,", "", -1))
-	if err != nil {
-		return Status{}, errors.New("couldn't convert percentage to integer")
-	}
+var acpiOutput = regexp.MustCompile("([0-9]+)%")
 
-	statusStruct := Status{
-		ChargePercent: i,
+func ParseACPIOutput(status string) (Status, error) {
+	matches := acpiOutput.FindStringSubmatch(status)
+	if len(matches) < 2 {
+		return Status{}, fmt.Errorf("failed to parse acpi output: %q", status)
 	}
-	return statusStruct, nil
+	charge, err := strconv.Atoi(matches[1])
+	if err != nil {
+		return Status{}, fmt.Errorf("failed to parse charge percentage: %q", matches[1])
+	}
+	return Status{
+		ChargePercent: charge,
+	}, nil
 }
