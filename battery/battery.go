@@ -28,7 +28,7 @@ func ParseACPIOutput(status string) (Status, error) {
 }
 
 func GetACPIOutput() (string, error) {
-	data, err := exec.Command("/usr/bin/acpi -b").CombinedOutput()
+	data, err := exec.Command("/usr/bin/acpi", "-b").CombinedOutput()
 	if err != nil {
 		return "", err
 	}
