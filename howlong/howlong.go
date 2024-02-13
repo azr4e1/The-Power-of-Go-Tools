@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-func TimeIt(command []string) (int64, error) {
+func TimeIt(command ...string) (int64, error) {
 	currentTime := time.Now()
 	_, err := exec.Command(command[0], command[1:]...).CombinedOutput()
 	if err != nil {
@@ -32,7 +32,7 @@ func Main() int {
 		flag.Usage()
 		return 0
 	}
-	duration, err := TimeIt(args)
+	duration, err := TimeIt(args...)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "an error occurred")
 		fmt.Fprintln(os.Stderr, err)
