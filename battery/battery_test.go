@@ -1,12 +1,11 @@
-//go:build integration
-
 package battery_test
 
 import (
 	"battery"
-	"github.com/google/go-cmp/cmp"
 	"os"
 	"testing"
+
+	"github.com/google/go-cmp/cmp"
 )
 
 func TestGetBattery_GetsTheRightBatteryValueDischarging(t *testing.T) {
@@ -21,5 +20,13 @@ func TestGetBattery_GetsTheRightBatteryValueDischarging(t *testing.T) {
 	got, err := battery.ParseACPIOutput(string(batteryStatus))
 	if !cmp.Equal(want, got) {
 		t.Error(cmp.Diff(want, got))
+	}
+}
+
+func TestGetBattery_TestBehaviorFailing(t *testing.T) {
+	t.Parallel()
+	_, err := battery.ParseACPIOutput("")
+	if err == nil {
+		t.Error("expected error, got nil")
 	}
 }

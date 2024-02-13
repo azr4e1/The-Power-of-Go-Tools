@@ -2,6 +2,7 @@ package battery
 
 import (
 	"fmt"
+	"os/exec"
 	"regexp"
 	"strconv"
 )
@@ -24,4 +25,12 @@ func ParseACPIOutput(status string) (Status, error) {
 	return Status{
 		ChargePercent: charge,
 	}, nil
+}
+
+func GetACPIOutput() (string, error) {
+	data, err := exec.Command("/usr/bin/acpi -b").CombinedOutput()
+	if err != nil {
+		return "", err
+	}
+	return string(data), nil
 }
