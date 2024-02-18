@@ -3,6 +3,7 @@ package shell
 import (
 	"bufio"
 	"errors"
+	"flag"
 	"fmt"
 	"io"
 	"os"
@@ -14,8 +15,8 @@ type session struct {
 	stdin      io.Reader
 	stdout     io.Writer
 	stderr     io.Writer
+	transcript io.Writer
 	dryRun     bool
-	transcript bool
 }
 
 type option func(*session) error
@@ -57,8 +58,11 @@ func SetDryRun(dryrun bool) option {
 	}
 }
 
-func SetTranscript(transcript bool) option {
+func SetTranscript(transcript io.Writer) option {
 	return func(s *session) error {
+		if transcript == nil {
+			return errors.New("Transcript buffer is nil")
+		}
 		s.transcript = transcript
 		return nil
 	}
@@ -80,8 +84,8 @@ func NewSession(opt ...option) *session {
 		stdin:      os.Stdin,
 		stdout:     os.Stdout,
 		stderr:     os.Stderr,
+		transcript: io.Discard,
 		dryRun:     false,
-		transcript: false,
 	}
 
 	ptr := &session
@@ -98,29 +102,58 @@ func NewSession(opt ...option) *session {
 
 func (s *session) Run() {
 	fmt.Fprintf(s.stdout, "> ")
+	fmt.Fprintf(s.transcript, "> ")
 	input := bufio.NewScanner(s.stdin)
 	for input.Scan() {
 		line := input.Text()
+		fmt.Fprintln(s.transcript, line)
+
 		cmd, err := CmdFromString(line)
 		if err != nil {
 			fmt.Fprintf(s.stdout, "> ")
+			fmt.Fprintf(s.transcript, "> ")
 			continue
 		}
 		if s.dryRun {
 			fmt.Fprintf(s.stdout, "command '%s' would have been executed\n> ", line)
+			fmt.Fprintf(s.transcript, "command '%s' would have been executed\n> ", line)
 			continue
 		}
 		data, err := cmd.CombinedOutput()
 		if err != nil {
 			fmt.Fprintln(s.stdout, "error:", err)
+			fmt.Fprintln(s.transcript, "error:", err)
 		}
 		fmt.Fprintf(s.stdout, "%s> ", data)
+		fmt.Fprintf(s.transcript, "%s> ", data)
 	}
 	fmt.Fprintln(s.stdout, "\nBe seeing you!")
+	fmt.Fprintln(s.transcript, "\nBe seeing you!")
 }
 
 func Main() int {
-	session := NewSession()
+	flag.Usage = func() {
+		fmt.Printf("Usage: %s [-transcript]\n", os.Args[0])
+		fmt.Println("Launch shell")
+		fmt.Println("Flags:")
+		flag.PrintDefaults()
+	}
+	transcript := flag.Bool("transcript", false, "record the transcript of this session and save it to file 'transcript.txt' in the current folder.")
+	flag.Parse()
+	args := make([]option, 0, 1)
+
+	if *transcript {
+		file, err := os.Create("transcript.txt")
+		defer file.Close()
+		if err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			return 1
+		}
+		args = append(args, SetTranscript(file))
+	}
+
+	session := NewSession(args...)
+	// session := NewSession()
 	session.Run()
 	return 0
 }

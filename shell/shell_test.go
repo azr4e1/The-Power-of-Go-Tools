@@ -11,6 +11,7 @@ import (
 	"io"
 	"os/exec"
 	"shell"
+	"strings"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -65,6 +66,23 @@ func TestRunProducesExpectedOutput(t *testing.T) {
 	session.Run()
 
 	got := output.String()
+	if !cmp.Equal(want, got) {
+		t.Error(cmp.Diff(want, got))
+	}
+}
+
+func TestRun_TranscriptFeatureProducesExpectedTranscript(t *testing.T) {
+	t.Parallel()
+	input := strings.NewReader("echo test\n\n")
+	output := new(bytes.Buffer)
+	transcript := new(bytes.Buffer)
+
+	want := "> echo test\ncommand 'echo test' would have been executed\n> \n> \nBe seeing you!\n"
+
+	session := shell.NewSession(shell.SetStdin(input), shell.SetStdout(output), shell.SetStderr(io.Discard), shell.SetDryRun(true), shell.SetTranscript(transcript))
+	session.Run()
+
+	got := transcript.String()
 	if !cmp.Equal(want, got) {
 		t.Error(cmp.Diff(want, got))
 	}
