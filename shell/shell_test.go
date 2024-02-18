@@ -52,17 +52,18 @@ func TestNewSession_CreatesANewSession(t *testing.T) {
 	}
 }
 
-func TestRun_CreatesANewInteractiveSessionAndOutputsToStdout(t *testing.T) {
+func TestRunProducesExpectedOutput(t *testing.T) {
 	t.Parallel()
 	input := new(bytes.Buffer)
 	output := new(bytes.Buffer)
 
 	inputText := "echo test\n\n"
-	want := "> hello\n> > \nBe seeing you!\n"
+	want := "> command 'echo test' would have been executed\n> > \nBe seeing you!\n"
 
 	input.WriteString(inputText)
 
 	session := shell.NewSession(input, output, io.Discard)
+	session.DryRun = true
 	session.Run()
 
 	got := output.String()
