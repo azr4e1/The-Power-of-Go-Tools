@@ -1,8 +1,8 @@
 package piping
 
 import (
-	"bufio"
 	"io"
+	"os"
 	"strings"
 )
 
@@ -12,17 +12,33 @@ type Pipeline struct {
 	Error  error
 }
 
-func FromString(data string) *Pipeline {
-	p := Pipeline{
-		Data: strings.NewReader(data),
+func New() *Pipeline {
+	return &Pipeline{
+		Output: os.Stdout,
 	}
+}
 
-	return &p
+func FromString(data string) *Pipeline {
+	p := New()
+	p.Data = strings.NewReader(data)
+
+	return p
+}
+
+func FromFile(filename string) *Pipeline {
+	p := New()
+	reader, err := os.Open(filename)
+	if err != nil {
+		return &Pipeline{Error: err}
+	}
+	p.Data = reader
+
+	return p
 }
 
 func (p *Pipeline) Stdout() {
-	input := bufio.NewScanner(p.Data)
-	for input.Scan() {
-		_, _ = p.Output.Write(input.Bytes())
+	if p.Error != nil {
+		return
 	}
+	io.Copy(p.Output, p.Data)
 }
