@@ -3,10 +3,14 @@ package piping_test
 import (
 	"bytes"
 	"errors"
+	"fmt"
+	"io"
 	"io/fs"
 	"os"
 	"piping"
 	"testing"
+
+	"github.com/google/go-cmp/cmp"
 )
 
 func TestStdoutMethodOutputsToBuffer(t *testing.T) {
@@ -71,5 +75,78 @@ func TestFromFile_HandlesErrorsCorrectly(t *testing.T) {
 
 	if p.Error == nil {
 		t.Fatal("want error opening non-existent file, got nil")
+	}
+}
+
+func TestColumnSelectsTheCorrectColumn(t *testing.T) {
+	t.Parallel()
+	data := "1 2 3\n1 2 3\n1 2 3\n"
+	want := "2\n2\n2\n"
+
+	p := piping.FromString(data)
+
+	got, err := p.Column(2).String()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if want != got {
+		t.Errorf("want %q, got %q", want, got)
+	}
+}
+
+func TestColumnProducesNothingWhenPipeErrorSet(t *testing.T) {
+	t.Parallel()
+	input := "1 2 3\n1 2 3\n1 2 3\n"
+
+	p := piping.FromString(input)
+	p.Error = errors.New("oh no")
+
+	data, err := io.ReadAll(p.Column(2).Data)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(data) > 0 {
+		t.Errorf("want no output from Column after error, but got %q", data)
+	}
+}
+
+func TestColumnSetsErrorAndProducesNothingGivenInvalidArg(t *testing.T) {
+	t.Parallel()
+	p := piping.FromString("1 2 3\n1 2 3\n1 2 3\n")
+	res := p.Column(-1)
+	if res.Error == nil {
+		fmt.Println(p)
+		t.Error("want error on non-positive Column, got nil")
+	}
+	data, err := io.ReadAll(p.Column(-1).Data)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(data) > 0 {
+		t.Errorf("want no output from Column with invalid col, but got %q", data)
+	}
+}
+
+func TestStringReturnsPipeContents(t *testing.T) {
+	t.Parallel()
+	want := "Hello, world\n"
+	p := piping.FromString(want)
+	got, err := p.String()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !cmp.Equal(want, got) {
+		t.Errorf("want %q, got %q", want, got)
+	}
+}
+
+func TestStringReturnsErrorWhenPipeErrorSet(t *testing.T) {
+	t.Parallel()
+	p := piping.FromString("Hello, world\n")
+	p.Error = errors.New("oh no")
+	_, err := p.String()
+	if err == nil {
+		t.Error("want error from String when pipeline has error, but got nil")
 	}
 }
