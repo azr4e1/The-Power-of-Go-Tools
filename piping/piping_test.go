@@ -126,6 +126,18 @@ func TestColumnSetsErrorAndProducesNothingGivenInvalidArg(t *testing.T) {
 	if len(data) > 0 {
 		t.Errorf("want no output from Column with invalid col, but got %q", data)
 	}
+	res = p.Column(5)
+	if res.Error == nil {
+		fmt.Println(p)
+		t.Error("want error on non-positive Column, got nil")
+	}
+	data, err = io.ReadAll(p.Column(5).Data)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(data) > 0 {
+		t.Errorf("want no output from Column with invalid col, but got %q", data)
+	}
 }
 
 func TestStringReturnsPipeContents(t *testing.T) {
