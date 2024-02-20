@@ -208,6 +208,9 @@ func WalkFiles(fsys fs.FS) *Pipeline {
 	var files []string
 
 	fs.WalkDir(fsys, ".", func(p string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
 		if d.Type().IsDir() {
 			return nil
 		}
