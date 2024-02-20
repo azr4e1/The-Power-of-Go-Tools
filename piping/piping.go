@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"io/fs"
 	"os"
 	"sort"
 	"strings"
@@ -196,6 +197,29 @@ func (p *Pipeline) First(n int) *Pipeline {
 	for i := 0; input.Scan() && i < n; i++ {
 		fmt.Fprintln(buf, input.Text())
 	}
+	res := New()
+	res.Data = buf
+
+	return res
+}
+
+func WalkFiles(fsys fs.FS) *Pipeline {
+	var files []string
+
+	fs.WalkDir(fsys, ".", func(p string, d fs.DirEntry, err error) error {
+		if d.Type().IsDir() {
+			return nil
+		}
+		files = append(files, p)
+
+		return nil
+	})
+
+	buf := new(bytes.Buffer)
+	for _, el := range files {
+		fmt.Fprintln(buf, el)
+	}
+
 	res := New()
 	res.Data = buf
 

@@ -9,6 +9,7 @@ import (
 	"os"
 	"piping"
 	"testing"
+	"testing/fstest"
 
 	"github.com/google/go-cmp/cmp"
 )
@@ -342,5 +343,36 @@ func TestFirstReturnsNothingWhenProvidingInvalidArgs(t *testing.T) {
 	if !cmp.Equal(got, want) {
 		t.Error(cmp.Diff(got, want))
 	}
-
 }
+
+func TestWalkCorrectlyFindsTheFileSystem(t *testing.T) {
+	t.Parallel()
+	fsys := fstest.MapFS{
+		"file.go":                         {Data: []byte("package main\n\nfunc main()\n{}\n\n")},
+		"prova.txt":                       {Data: []byte("ciao come va?")},
+		"extrafolder/prova2.js":           {Data: []byte("console.log()")},
+		"subfolder/subfolder.go":          {Data: []byte("package script\nfunc Prova() int {\n\nfmt.Println(\"ciao\")\n\n}")},
+		"subfolder2/another.go":           {Data: []byte("package main\n\n\n")},
+		"subfolder2/file.go":              {Data: []byte("package findgo\n\nimport (\n\"fmt\"\n\"os\"\n)\n\nfunc Find(location string) []string {\nfmt.Println()\n}")},
+		"subfolder2/file.sql":             {Data: []byte("ciao\ndi nuovo")},
+		"subfolder2/subfolder3/prova.go":  {Data: []byte("package prova\n")},
+		"subfolder2/subfolder3/prova.txt": {},
+	}
+
+	want := "extrafolder/prova2.js\nfile.go\nprova.txt\nsubfolder/subfolder.go\nsubfolder2/another.go\nsubfolder2/file.go\nsubfolder2/file.sql\nsubfolder2/subfolder3/prova.go\nsubfolder2/subfolder3/prova.txt\n"
+
+	p := piping.WalkFiles(fsys)
+	got, err := p.String()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if !cmp.Equal(got, want) {
+		t.Error(cmp.Diff(got, want))
+	}
+}
+
+// func TestGrepFindsLinesCorrectly(t *testing.T) {
+// 	t.Parallel()
+
+// }
