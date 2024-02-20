@@ -8,6 +8,7 @@ import (
 	"io/fs"
 	"os"
 	"piping"
+	"strings"
 	"testing"
 	"testing/fstest"
 
@@ -372,7 +373,150 @@ func TestWalkCorrectlyFindsTheFileSystem(t *testing.T) {
 	}
 }
 
-// func TestGrepFindsLinesCorrectly(t *testing.T) {
-// 	t.Parallel()
+func TestGrepFindsLinesCorrectly(t *testing.T) {
+	t.Parallel()
+	input := "\\.go$"
+	p := piping.FromString("extrafolder/prova2.js\nfile.go\nprova.txt\nsubfolder/subfolder.go\nsubfolder2/another.go\nsubfolder2/file.go\nsubfolder2/file.sql\nsubfolder2/subfolder3/prova.go\nsubfolder2/subfolder3/prova.txt\n")
 
-// }
+	want := "file.go\nsubfolder/subfolder.go\nsubfolder2/another.go\nsubfolder2/file.go\nsubfolder2/subfolder3/prova.go\n"
+
+	res := p.Grep(input)
+
+	got, err := res.String()
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if !cmp.Equal(got, want) {
+		t.Error(cmp.Diff(got, want))
+	}
+}
+
+func TestGrepReturnsNothingWhenSettingError(t *testing.T) {
+	t.Parallel()
+	inputString := "1\n2\n3\n"
+	p := piping.FromString(inputString)
+	p.Error = errors.New("oh no")
+
+	res := p.Grep("prova")
+	if res.Error == nil {
+		t.Error("want error, got nil")
+	}
+
+	data, err := io.ReadAll(res.Data)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(data) > 0 {
+		t.Errorf("expected zero length data buffer, got %d len data buffer", len(data))
+	}
+}
+
+func TestConcatConcatenatesCorrectlyTheContentOfFiles(t *testing.T) {
+	t.Parallel()
+	fsys := os.DirFS(".")
+	files := "testdata/log.txt\ntestdata/test.txt\n"
+	want := []byte{}
+	for _, file := range strings.Split(files, "\n") {
+		if file == "" {
+			continue
+		}
+		openFile, err := os.Open(file)
+		if err != nil {
+			t.Fatal(err)
+		}
+		data, err := io.ReadAll(openFile)
+		if err != nil {
+			t.Fatal(err)
+		}
+		for _, el := range data {
+			want = append(want, el)
+		}
+	}
+
+	p := piping.FromString(files)
+
+	res := p.Concat(fsys)
+
+	got, err := res.String()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if !cmp.Equal(got, string(want)) {
+		t.Error(cmp.Diff(string(want), got))
+	}
+}
+
+func TestConcatReturnsNothingWhenSettingError(t *testing.T) {
+	t.Parallel()
+	fsys := os.DirFS(".")
+	inputString := "1\n2\n3\n"
+	p := piping.FromString(inputString)
+	p.Error = errors.New("oh no")
+
+	res := p.Concat(fsys)
+	if res.Error == nil {
+		t.Error("want error, got nil")
+	}
+
+	data, err := io.ReadAll(res.Data)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(data) > 0 {
+		t.Errorf("expected zero length data buffer, got %d len data buffer", len(data))
+	}
+}
+
+func TestConcatProducesNothingWhenProvidingWrongFiles(t *testing.T) {
+	t.Parallel()
+	fsys := os.DirFS(".")
+	inputString := "bogus"
+	p := piping.FromString(inputString)
+
+	res := p.Concat(fsys)
+
+	if res.Error == nil {
+		t.Error("want error, got nil")
+	}
+
+	data, err := io.ReadAll(res.Data)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(data) > 0 {
+		t.Errorf("expected zero length data buffer, got %d len data buffer", len(data))
+	}
+}
+
+func TestLinesCountsTheCorrectNumberOfLines(t *testing.T) {
+	t.Parallel()
+	input := "1\n2\n3\n4\n"
+	want := 4
+	p := piping.FromString(input)
+
+	got, err := p.Lines()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got != want {
+		t.Errorf("want %d, got %d", want, got)
+	}
+}
+
+func TestLinesReturnsErrorIfErrorInPipeline(t *testing.T) {
+	t.Parallel()
+	input := "1\n2\n3\n4\n"
+	p := piping.FromString(input)
+	p.Error = errors.New("oh no")
+
+	got, err := p.Lines()
+	if err == nil {
+		t.Error("expected error, got nil")
+	}
+	if got != 0 {
+		t.Error("expected exmpty string, got value")
+	}
+}

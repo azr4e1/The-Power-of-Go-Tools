@@ -8,6 +8,7 @@ import (
 	"io"
 	"io/fs"
 	"os"
+	"regexp"
 	"sort"
 	"strings"
 )
@@ -224,6 +225,99 @@ func WalkFiles(fsys fs.FS) *Pipeline {
 	res.Data = buf
 
 	return res
+}
+
+func (p *Pipeline) Grep(regex string) *Pipeline {
+	if p.Error != nil {
+		errorPip := FromString("")
+		errorPip.Error = p.Error
+		return errorPip
+	}
+
+	if p.Data == nil {
+		errorPip := FromString("")
+		errorPip.Error = errors.New("no data to sort.")
+		return errorPip
+	}
+
+	pattern, err := regexp.Compile(regex)
+
+	if err != nil {
+		errorPip := FromString("")
+		errorPip.Error = err
+		return errorPip
+	}
+
+	input := bufio.NewScanner(p.Data)
+	buf := new(bytes.Buffer)
+
+	for input.Scan() {
+		line := input.Text()
+		if pattern.MatchString(line) {
+			fmt.Fprintln(buf, line)
+		}
+	}
+
+	res := New()
+	res.Data = buf
+
+	return res
+}
+
+func (p *Pipeline) Concat(fsys fs.FS) *Pipeline {
+	if p.Error != nil {
+		errorPip := FromString("")
+		errorPip.Error = p.Error
+		return errorPip
+	}
+
+	if p.Data == nil {
+		errorPip := FromString("")
+		errorPip.Error = errors.New("no data to sort.")
+		return errorPip
+	}
+
+	input := bufio.NewScanner(p.Data)
+	buf := new(bytes.Buffer)
+
+	for input.Scan() {
+		filename := input.Text()
+		file, err := fsys.Open(filename)
+		if err != nil {
+			errorPip := FromString("")
+			errorPip.Error = err
+			return errorPip
+		}
+		_, err = io.Copy(buf, file)
+		if err != nil {
+			errorPip := FromString("")
+			errorPip.Error = err
+			return errorPip
+		}
+	}
+
+	res := New()
+	res.Data = buf
+
+	return res
+}
+
+func (p *Pipeline) Lines() (int, error) {
+	if p.Error != nil {
+		return 0, p.Error
+	}
+
+	if p.Data == nil {
+		return 0, errors.New("empty pipeline")
+	}
+
+	input := bufio.NewScanner(p.Data)
+	i := 0
+	for ; input.Scan(); i++ {
+		continue
+	}
+
+	return i, nil
 }
 
 func (p *Pipeline) Stdout() {
