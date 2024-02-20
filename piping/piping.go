@@ -151,7 +151,6 @@ func (p *Pipeline) Sort(descending bool) *Pipeline {
 		return errorPip
 	}
 	lines := strings.Split(content, "\n")
-	fmt.Println(len(lines))
 	sort.Slice(lines, func(i, j int) bool {
 		if descending {
 			return lines[i] > lines[j]
@@ -174,7 +173,31 @@ func (p *Pipeline) Sort(descending bool) *Pipeline {
 }
 
 func (p *Pipeline) First(n int) *Pipeline {
-	res := FromString("")
+	if p.Error != nil {
+		errorPip := FromString("")
+		errorPip.Error = p.Error
+		return errorPip
+	}
+
+	if p.Data == nil {
+		errorPip := FromString("")
+		errorPip.Error = errors.New("no data to sort.")
+		return errorPip
+	}
+
+	if n < 1 {
+		errorPip := FromString("")
+		errorPip.Error = errors.New("invalid argument")
+		return errorPip
+	}
+
+	input := bufio.NewScanner(p.Data)
+	buf := new(bytes.Buffer)
+	for i := 0; input.Scan() && i < n; i++ {
+		fmt.Fprintln(buf, input.Text())
+	}
+	res := New()
+	res.Data = buf
 
 	return res
 }

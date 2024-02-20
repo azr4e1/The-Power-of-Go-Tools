@@ -276,4 +276,71 @@ func TestSortReturnsNothingWhenPipelineIsEmpty(t *testing.T) {
 
 func TestFirstReturnsTheFirstNElementsOfThePipeline(t *testing.T) {
 	t.Parallel()
+	inputString := "1\n2\n3\n4\n5\n6\n7\n8\n"
+	want := "1\n2\n3\n4\n5\n"
+
+	p := piping.FromString(inputString)
+	res := p.First(5)
+
+	got, err := res.String()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !cmp.Equal(got, want) {
+		t.Error(cmp.Diff(got, want))
+	}
+}
+
+func TestFirstReturnsNothingWhenSettingError(t *testing.T) {
+	t.Parallel()
+	inputString := "1\n2\n3\n"
+	p := piping.FromString(inputString)
+	p.Error = errors.New("oh no")
+
+	res := p.First(5)
+	if res.Error == nil {
+		t.Error("want error, got nil")
+	}
+
+	data, err := io.ReadAll(res.Data)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(data) > 0 {
+		t.Errorf("expected zero length data buffer, got %d len data buffer", len(data))
+	}
+}
+
+func TestFirstReturnsNothingWhenProvidingInvalidArgs(t *testing.T) {
+	t.Parallel()
+	inputString := "1\n2\n3\n"
+	p := piping.FromString(inputString)
+
+	res := p.First(-1)
+	if res.Error == nil {
+		t.Error("want error, got nil")
+	}
+
+	data, err := io.ReadAll(res.Data)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(data) > 0 {
+		t.Errorf("expected zero length data buffer, got %d len data buffer", len(data))
+	}
+
+	res = p.First(10)
+	want := inputString
+	if res.Error != nil {
+		t.Fatal("expected nil, got error")
+	}
+	got, err := res.String()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if !cmp.Equal(got, want) {
+		t.Error(cmp.Diff(got, want))
+	}
+
 }

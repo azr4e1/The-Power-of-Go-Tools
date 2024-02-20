@@ -1,11 +1,9 @@
 package main
 
 import (
-	"fmt"
 	"piping"
 )
 
 func main() {
-	piping.FromString("hello, world\n").Stdout()
-	fmt.Println("1111" < "b")
+	piping.FromFile("../../testdata/log.txt").Column(1).Sort(false).Freq().Sort(true).First(10).Stdout()
 }
