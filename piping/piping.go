@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"sort"
 	"strings"
 )
 
@@ -90,6 +91,92 @@ func (p *Pipeline) Column(n int) *Pipeline {
 	outPip.Data = buf
 
 	return outPip
+}
+
+func (p *Pipeline) Freq() *Pipeline {
+	type Counter struct {
+		value string
+		count int
+	}
+
+	if p.Error != nil {
+		errorPip := FromString("")
+		errorPip.Error = p.Error
+		return errorPip
+	}
+
+	if p.Data == nil {
+		errorPip := FromString("")
+		errorPip.Error = errors.New("no data to filter.")
+		return errorPip
+	}
+
+	input := bufio.NewScanner(p.Data)
+	buf := new(bytes.Buffer)
+	counter := Counter{}
+	for input.Scan() {
+		line := input.Text()
+		if counter.value != line {
+			if counter.count > 0 {
+				fmt.Fprintf(buf, "%d %v\n", counter.count, counter.value)
+			}
+			counter = Counter{value: line, count: 0}
+		}
+		counter.count++
+	}
+	fmt.Fprintf(buf, "%d %v\n", counter.count, counter.value)
+
+	res := New()
+	res.Data = buf
+
+	return res
+}
+
+func (p *Pipeline) Sort(descending bool) *Pipeline {
+	if p.Error != nil {
+		errorPip := FromString("")
+		errorPip.Error = p.Error
+		return errorPip
+	}
+
+	if p.Data == nil {
+		errorPip := FromString("")
+		errorPip.Error = errors.New("no data to sort.")
+		return errorPip
+	}
+	content, err := p.String()
+	if err != nil {
+		errorPip := FromString("")
+		errorPip.Error = errors.New("no data to sort.")
+		return errorPip
+	}
+	lines := strings.Split(content, "\n")
+	fmt.Println(len(lines))
+	sort.Slice(lines, func(i, j int) bool {
+		if descending {
+			return lines[i] > lines[j]
+		}
+		return lines[i] < lines[j]
+	})
+
+	buf := new(bytes.Buffer)
+	for _, el := range lines {
+		if el == "" {
+			continue
+		}
+		fmt.Fprintln(buf, el)
+	}
+
+	res := New()
+	res.Data = buf
+
+	return res
+}
+
+func (p *Pipeline) First(n int) *Pipeline {
+	res := FromString("")
+
+	return res
 }
 
 func (p *Pipeline) Stdout() {

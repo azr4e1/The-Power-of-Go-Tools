@@ -150,3 +150,118 @@ func TestStringReturnsErrorWhenPipeErrorSet(t *testing.T) {
 		t.Error("want error from String when pipeline has error, but got nil")
 	}
 }
+
+func TestFreqGetsTheFrequencyOfContiguousDuplicateElements(t *testing.T) {
+	t.Parallel()
+	inputString := "1\n1\n2\n3\n2\n1\n1"
+	want := "2 1\n1 2\n1 3\n1 2\n2 1\n"
+	p := piping.FromString(inputString)
+	res := p.Freq()
+	got, err := res.String()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !cmp.Equal(want, got) {
+		t.Error(cmp.Diff(want, got))
+	}
+}
+
+func TestFreqSetErrorsReturnsNothing(t *testing.T) {
+	t.Parallel()
+	inputString := "1 1 1"
+	p := piping.FromString(inputString)
+	p.Error = errors.New("oh no")
+	res := p.Freq()
+	if res.Error == nil {
+		t.Error("expected error, got nil")
+	}
+	data, err := io.ReadAll(res.Data)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(data) > 0 {
+		t.Errorf("Expected no length data, got data of length %d bytes", len(data))
+	}
+}
+
+func TestFreqReturnsNothingWhenPipelineIsEmpty(t *testing.T) {
+	t.Parallel()
+	p := piping.New()
+	res := p.Freq()
+	if res.Error == nil {
+		t.Fatal("want error, got nil when pipeline is empty")
+	}
+	data, err := io.ReadAll(res.Data)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(data) > 0 {
+		t.Error("want empty pipeline, got data")
+	}
+}
+
+func TestSortSortsDataOfPipelineInSpecifiedOrder(t *testing.T) {
+	t.Parallel()
+	inputString := "1\n2\n1\n3\n7\nciao\nhello\n"
+	wantAscending := "1\n1\n2\n3\n7\nciao\nhello\n"
+	wantDescending := "hello\nciao\n7\n3\n2\n1\n1\n"
+	p := piping.FromString(inputString)
+	resAscending := p.Sort(false)
+
+	got, err := resAscending.String()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !cmp.Equal(got, wantAscending) {
+		t.Error(cmp.Diff(got, wantAscending))
+	}
+
+	p = piping.FromString(inputString)
+	resDescending := p.Sort(true)
+
+	got, err = resDescending.String()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !cmp.Equal(got, wantDescending) {
+		t.Error(cmp.Diff(got, wantDescending))
+	}
+}
+
+func TestSortReturnsNothingWhenPipelineHasErrors(t *testing.T) {
+	t.Parallel()
+	inputString := "1 1 1"
+	p := piping.FromString(inputString)
+	p.Error = errors.New("oh no")
+	res := p.Sort(true)
+	if res.Error == nil {
+		t.Error("expected error, got nil")
+	}
+	data, err := io.ReadAll(res.Data)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(data) > 0 {
+		t.Errorf("Expected no length data, got data of length %d bytes", len(data))
+	}
+}
+
+func TestSortReturnsNothingWhenPipelineIsEmpty(t *testing.T) {
+	t.Parallel()
+	p := piping.New()
+	res := p.Sort(true)
+	if res.Error == nil {
+		t.Fatal("want error, got nil when pipeline is empty")
+	}
+	data, err := io.ReadAll(res.Data)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(data) > 0 {
+		t.Error("want empty pipeline, got data")
+	}
+}
+
+func TestFirstReturnsTheFirstNElementsOfThePipeline(t *testing.T) {
+
+}
