@@ -275,5 +275,5 @@ func TestSortReturnsNothingWhenPipelineIsEmpty(t *testing.T) {
 }
 
 func TestFirstReturnsTheFirstNElementsOfThePipeline(t *testing.T) {
-
+	t.Parallel()
 }
