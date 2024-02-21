@@ -29,10 +29,7 @@ func TestToJSON_EncodesDataCorrectlyToString(t *testing.T) {
 		t.Fatal(err)
 	}
 	want := string(wantByte)
-	got, err := batt.ToJSON()
-	if err != nil {
-		t.Fatal(err)
-	}
+	got := batt.ToJSON()
 
 	if !cmp.Equal(want, got) {
 		t.Error(want, got)

@@ -1,7 +1,7 @@
 package battery2
 
 import (
-	"bytes"
+	// "bytes"
 	"encoding/json"
 )
 
@@ -13,13 +13,19 @@ type Battery struct {
 	Present          bool
 }
 
-func (b Battery) ToJSON() (string, error) {
-	buf := new(bytes.Buffer)
-	encoder := json.NewEncoder(buf)
-	err := encoder.Encode(b)
+func (b Battery) ToJSON() string {
+	// buf := new(bytes.Buffer)
+	// encoder := json.NewEncoder(buf)
+	// err := encoder.Encode(b)
+	// if err != nil {
+	// 	return "", err
+	// }
+
+	// return buf.String(), nil
+	data, err := json.MarshalIndent(b, "", "  ")
 	if err != nil {
-		return "", err
+		panic(err)
 	}
 
-	return buf.String(), nil
+	return string(data)
 }
