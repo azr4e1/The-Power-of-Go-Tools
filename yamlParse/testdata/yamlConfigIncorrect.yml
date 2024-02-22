@@ -1,0 +1,9 @@
+# my global config
+global:
+  scrape_iterval: 15s
+  evauation_interval: 30
+  # scrape_timeout is set to the global default (10s).
+
+  external_labels:
+    monitor: codelab
+    foo: bar
