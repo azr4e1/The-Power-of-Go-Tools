@@ -54,10 +54,10 @@ func TestFormatURL_FormatsCorrectURLProvidedLocationAndKey(t *testing.T) {
 	t.Parallel()
 	key := "woienvkdfjlsns"
 	location := "London,UK"
-	baseURL := "https://api.openweathermap.org"
 	want := "https://api.openweathermap.org/data/2.5/weather?q=London,UK&appid=woienvkdfjlsns"
 
-	got := clients.FormatURL(baseURL, location, key)
+	c := clients.NewClient(key)
+	got := c.FormatURL(location)
 
 	if got != want {
 		t.Errorf("got %q, want %q", got, want)
@@ -93,5 +93,31 @@ func TestHTTPGet_SuccessfullyGetsFromLocalServer(t *testing.T) {
 
 	if !cmp.Equal(got, want) {
 		t.Error(cmp.Diff(got, want))
+	}
+}
+
+func TestGetWeather_RetrievesCorrectData(t *testing.T) {
+	t.Parallel()
+	ts := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "testdata/weatherJSON.json")
+	}))
+	defer ts.Close()
+
+	client := ts.Client()
+	location := "London,UK"
+
+	c := clients.NewClient("dummyKey")
+	c.BaseURL = ts.URL
+	c.HTTPClient = client
+
+	got, err := c.GetWeather(location)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	want := clients.Weather{Sky: "Clouds"}
+
+	if !cmp.Equal(want, got) {
+		t.Error(cmp.Diff(want, got))
 	}
 }
