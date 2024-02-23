@@ -16,7 +16,7 @@ Example: weather London,UK`
 
 type Weather struct {
 	Sky         string
-	Temperature float64
+	Temperature Temperature
 	// City        string
 }
 
@@ -25,6 +25,8 @@ type Client struct {
 	APIKey     string
 	HTTPClient *http.Client
 }
+
+type Temperature float64
 
 func NewClient(apikey string) *Client {
 	return &Client{
@@ -58,7 +60,7 @@ func ParseResponse(data []byte) (Weather, error) {
 
 	weather := Weather{
 		Sky:         weatherTmp[0].Main,
-		Temperature: tmp.Main.Temp,
+		Temperature: Temperature(tmp.Main.Temp),
 	}
 	return weather, nil
 }
@@ -124,6 +126,10 @@ func Main() int {
 		return 1
 	}
 
-	fmt.Println(weather)
+	fmt.Printf("%s %.1fºC\n", weather.Sky, weather.Temperature.Celsius())
 	return 0
+}
+
+func (t Temperature) Celsius() float64 {
+	return float64(t) - 273.15
 }

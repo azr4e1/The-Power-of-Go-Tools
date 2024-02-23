@@ -121,3 +121,15 @@ func TestGetWeather_RetrievesCorrectData(t *testing.T) {
 		t.Error(cmp.Diff(want, got))
 	}
 }
+
+func TestCelsiusConvertsTemperatureFromKelivToCelsius(t *testing.T) {
+	t.Parallel()
+	tempVal := 277.6
+	temp := clients.Temperature(tempVal)
+	want := tempVal - 273.15
+	got := temp.Celsius()
+
+	if want != got {
+		t.Errorf("want %f, got %f", want, got)
+	}
+}
