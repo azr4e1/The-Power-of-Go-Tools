@@ -15,8 +15,8 @@ const Usage = `Usage: weather LOCATION
 Example: weather London,UK`
 
 type Weather struct {
-	Sky string
-	// Temperature float64
+	Sky         string
+	Temperature float64
 	// City        string
 }
 
@@ -40,6 +40,9 @@ type OWMResponse struct {
 	Weather []struct {
 		Main string
 	}
+	Main struct {
+		Temp float64
+	}
 }
 
 func ParseResponse(data []byte) (Weather, error) {
@@ -53,7 +56,10 @@ func ParseResponse(data []byte) (Weather, error) {
 		return Weather{}, fmt.Errorf("error parsing json: not enough weather elements (%v).", data)
 	}
 
-	weather := Weather{Sky: weatherTmp[0].Main}
+	weather := Weather{
+		Sky:         weatherTmp[0].Main,
+		Temperature: tmp.Main.Temp,
+	}
 	return weather, nil
 }
 

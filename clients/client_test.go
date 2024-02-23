@@ -14,8 +14,8 @@ import (
 func TestParseResponse_CorrectlyParsesResponseFromJSON(t *testing.T) {
 	t.Parallel()
 	want := clients.Weather{
-		Sky: "Clouds",
-		// Temperature: 277.29,
+		Sky:         "Clouds",
+		Temperature: 277.29,
 		// City:        "London",
 	}
 	data, err := os.ReadFile("testdata/weatherJSON.json")
@@ -115,7 +115,7 @@ func TestGetWeather_RetrievesCorrectData(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	want := clients.Weather{Sky: "Clouds"}
+	want := clients.Weather{Sky: "Clouds", Temperature: 277.29}
 
 	if !cmp.Equal(want, got) {
 		t.Error(cmp.Diff(want, got))
